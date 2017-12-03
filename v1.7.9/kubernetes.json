@@ -28,6 +28,10 @@
 					"advancedHostConfig": "",
 					"advancedNetworkConfig": "",
 					"advancedConfig": "",
+					"k8sDeploymentAnnotations": {},
+					"k8sPodAnnotations": {},
+					"k8sServiceAnnotations": {},
+					"k8sStatefulSetAnnotations": {},
 					"healthCheck": [
 						{
 							"type": "NONE",
@@ -43,7 +47,7 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"requiredBy": [
@@ -143,7 +147,7 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"dependsOn": [
@@ -256,7 +260,7 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"dependsOn": [
@@ -296,6 +300,10 @@
 					"advancedHostConfig": "",
 					"advancedNetworkConfig": "",
 					"advancedConfig": "",
+					"k8sDeploymentAnnotations": {},
+					"k8sPodAnnotations": {},
+					"k8sServiceAnnotations": {},
+					"k8sStatefulSetAnnotations": {},
 					"portMappings": [
 						{
 							"containerPort": 10251,
@@ -335,7 +343,7 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"dependsOn": [
@@ -472,7 +480,7 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"dependsOn": [
@@ -550,7 +558,7 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"dependsOn": [
@@ -564,7 +572,7 @@
 		},
 		{
 			"name": "kubectl",
-			"imageRepository": "registry-v2.nirmata.io/nirmata/kubectl",
+			"imageRepository": "nirmata/kubectl",
 			"tag": "1.7.9",
 			"type": "stateless",
 			"serviceSpec": [
@@ -587,6 +595,10 @@
 					"advancedHostConfig": "",
 					"advancedNetworkConfig": "",
 					"advancedConfig": "",
+					"k8sDeploymentAnnotations": {},
+					"k8sPodAnnotations": {},
+					"k8sServiceAnnotations": {},
+					"k8sStatefulSetAnnotations": {},
 					"healthCheck": [
 						{
 							"type": "NONE",
@@ -611,24 +623,24 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"dependsOn": [
-				{
-					"name": "kubelet"
-				},
 				{
 					"name": "apiserver"
 				},
 				{
 					"name": "controller"
+				},
+				{
+					"name": "kubelet"
 				}
 			]
 		},
 		{
 			"name": "nirmata-kube-installer",
-			"imageRepository": "registry-v2.nirmata.io/nirmata/nirmata-kube-installer",
+			"imageRepository": "nirmata/nirmata-kube-installer",
 			"tag": "1.7.9",
 			"type": "stateless",
 			"serviceSpec": [
@@ -649,6 +661,10 @@
 					"advancedHostConfig": "",
 					"advancedNetworkConfig": "",
 					"advancedConfig": "",
+					"k8sDeploymentAnnotations": {},
+					"k8sPodAnnotations": {},
+					"k8sServiceAnnotations": {},
+					"k8sStatefulSetAnnotations": {},
 					"healthCheck": [
 						{
 							"type": "NONE",
@@ -680,7 +696,7 @@
 			],
 			"containerType": [
 				{
-					"name": "No Limit"
+					"name": "nolimit"
 				}
 			],
 			"dependsOn": [
@@ -714,22 +730,15 @@
 			]
 		},
 		{
-			"key": "TUNNEL_SERVER_URL",
-			"value": "wss://alpha.nirmata.io/tunnels",
-			"services": [
-				"nirmata-kube-installer"
-			]
-		},
-		{
 			"key": "NIRMATA_SERVICE_CLUSTER_IP_RANGE",
-			"value": "10.10.0.0/20",
+			"value": "10.10.0.0/16",
 			"services": [
 				"apiserver"
 			]
 		},
 		{
 			"key": "NIRMATA_CLUSTER_CIDR",
-			"value": "10.10.32.0/20",
+			"value": "10.244.0.0/16",
 			"services": [
 				"controller",
 				"proxy"
