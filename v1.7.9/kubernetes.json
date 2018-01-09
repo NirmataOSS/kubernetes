@@ -588,7 +588,7 @@
 		},
 		{
 			"name": "kubectl",
-			"imageRepository": "registry-v2.nirmata.io/nirmata/kubectl",
+			"imageRepository": "nirmata/kubectl",
 			"tag": "1.7.9",
 			"type": "stateless",
 			"serviceSpec": [
@@ -652,7 +652,7 @@
 		},
 		{
 			"name": "nirmata-kube-installer",
-			"imageRepository": "registry-v2.nirmata.io/nirmata/nirmata-kube-installer",
+			"imageRepository": "nirmata/nirmata-kube-installer",
 			"tag": "1.7.9",
 			"type": "stateless",
 			"serviceSpec": [
@@ -739,7 +739,7 @@
 		},
 		{
 			"key": "TUNNEL_SERVER_URL",
-			"value": "wss://alpha.nirmata.io/tunnels",
+			"value": "wss://www.nirmata.io/tunnels",
 			"services": [
 				"nirmata-kube-installer"
 			]
