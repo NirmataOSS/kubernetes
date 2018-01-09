@@ -3,16 +3,16 @@
 	"description": "",
 	"defaultRouteAction": "allow",
 	"orchestrator": "nirmata",
-	"type": "infrastructure",
+	"type": "application",
 	"services": [
 		{
 			"name": "etcd",
 			"imageRepository": "gcr.io/google_containers/etcd",
-			"tag": "2.2.1",
+			"tag": "3.0.14",
 			"type": "stateless",
 			"serviceSpec": [
 				{
-					"runCommand": "/usr/local/bin/etcd --bind-addr=0.0.0.0:4001 --data-dir=/var/etcd/data",
+					"runCommand": "/usr/local/bin/etcd {ETCD_ARGS}",
 					"hostname": "",
 					"volumeMappings": [],
 					"isPrivileged": false,
@@ -42,12 +42,21 @@
 							"successThreshold": 1,
 							"path": ""
 						}
+					],
+					"volumeSpecs": [
+						{
+							"containerMountPoint": "/var/etcd/data",
+							"hostPath": "",
+							"type": "namedVolume",
+							"volumeName": "etcd",
+							"size": 16
+						}
 					]
 				}
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"requiredBy": [
@@ -63,7 +72,7 @@
 			"type": "stateless",
 			"serviceSpec": [
 				{
-					"runCommand": "/hyperkube apiserver --advertise-address={NIRMATA_HOST_PRIVATE_ADDRESS} --service-cluster-ip-range={NIRMATA_SERVICE_CLUSTER_IP_RANGE} --insecure-bind-address=0.0.0.0 --etcd-servers=http://127.0.0.1:4001 --client-ca-file=/etc/kubernetes/ssl/ca.crt --tls-cert-file=/etc/kubernetes/ssl/server.crt --tls-private-key-file=/etc/kubernetes/ssl/server.key --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds --storage-backend=etcd2 --allow-privileged=true --service-account-key-file=/etc/kubernetes/ssl/server.key  --v=6",
+					"runCommand": "/hyperkube apiserver {KUBE_API_SERVER_ARGS}",
 					"hostname": "",
 					"volumeMappings": [
 						"/opt/nirmata/ssl:/etc/kubernetes/ssl"
@@ -147,7 +156,7 @@
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"dependsOn": [
@@ -183,7 +192,7 @@
 			"type": "stateless",
 			"serviceSpec": [
 				{
-					"runCommand": "/hyperkube controller-manager --master={apiserver.NIRMATA_SERVICE_ADDRESS}:8080 --service-account-private-key-file=/etc/kubernetes/ssl/server.key --root-ca-file=/etc/kubernetes/ssl/ca.crt --allocate-node-cidrs=true --cluster-cidr={NIRMATA_CLUSTER_CIDR} --cluster-name={NIRMATA_ENVIRONMENT_NAME} --v=6",
+					"runCommand": "/hyperkube controller-manager {KUBE_CONTROLLER_MANAGER_ARGS}",
 					"hostname": "",
 					"volumeMappings": [
 						"/opt/nirmata/ssl:/etc/kubernetes/ssl"
@@ -260,7 +269,7 @@
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"dependsOn": [
@@ -284,7 +293,7 @@
 			"type": "stateless",
 			"serviceSpec": [
 				{
-					"runCommand": "/hyperkube scheduler --master={apiserver.NIRMATA_SERVICE_ADDRESS}:8080",
+					"runCommand": "/hyperkube scheduler {KUBE_SCHEDULER_ARGS}",
 					"hostname": "",
 					"volumeMappings": [],
 					"isPrivileged": true,
@@ -343,7 +352,7 @@
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"dependsOn": [
@@ -359,7 +368,7 @@
 			"type": "stateless",
 			"serviceSpec": [
 				{
-					"runCommand": "/hyperkube kubelet --api-servers=http://{apiserver.NIRMATA_SERVICE_ADDRESS}:8080 --container-runtime=docker --allow-privileged=true --pod-manifest-path=/etc/kubernetes/manifests --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/opt/cni/bin --cluster-dns={NIRMATA_CLUSTER_DNS} --cluster-domain=cluster.local  --v=6 ",
+					"runCommand": "/hyperkube kubelet {KUBELET_ARGS}",
 					"hostname": "",
 					"volumeMappings": [
 						"/:/rootfs:ro",
@@ -455,7 +464,7 @@
 							"size": 16
 						},
 						{
-							"containerMountPoint": "/etc/kubernetes/ssl",
+							"containerMountPoint": "/etc/kubernetes/ssl:ro",
 							"hostPath": "/opt/nirmata/ssl",
 							"type": "hostDirectory",
 							"volumeName": "",
@@ -474,13 +483,20 @@
 							"type": "hostDirectory",
 							"volumeName": "",
 							"size": 16
+						},
+						{
+							"containerMountPoint": "/var/lib/kubeconfig:ro",
+							"hostPath": "/opt/nirmata/kubeconfig",
+							"type": "hostDirectory",
+							"volumeName": "",
+							"size": 16
 						}
 					]
 				}
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"dependsOn": [
@@ -507,7 +523,7 @@
 			"type": "stateless",
 			"serviceSpec": [
 				{
-					"runCommand": "/hyperkube proxy --kubeconfig=/var/lib/kubelet/proxy.yaml --cluster-cidr={NIRMATA_CLUSTER_CIDR} --v=6",
+					"runCommand": "/hyperkube proxy {KUBE_PROXY_ARGS}",
 					"hostname": "",
 					"volumeMappings": [],
 					"isPrivileged": true,
@@ -540,8 +556,8 @@
 					],
 					"volumeSpecs": [
 						{
-							"containerMountPoint": "/var/lib/kubelet/proxy.yaml:ro",
-							"hostPath": "/opt/nirmata/kubelet/proxy.yaml",
+							"containerMountPoint": "/var/lib/kubeconfig:ro",
+							"hostPath": "/opt/nirmata/kubeconfig",
 							"type": "hostDirectory",
 							"volumeName": "",
 							"size": 16
@@ -558,7 +574,7 @@
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"dependsOn": [
@@ -572,7 +588,7 @@
 		},
 		{
 			"name": "kubectl",
-			"imageRepository": "nirmata/kubectl",
+			"imageRepository": "registry-v2.nirmata.io/nirmata/kubectl",
 			"tag": "1.7.9",
 			"type": "stateless",
 			"serviceSpec": [
@@ -595,10 +611,6 @@
 					"advancedHostConfig": "",
 					"advancedNetworkConfig": "",
 					"advancedConfig": "",
-					"k8sDeploymentAnnotations": {},
-					"k8sPodAnnotations": {},
-					"k8sServiceAnnotations": {},
-					"k8sStatefulSetAnnotations": {},
 					"healthCheck": [
 						{
 							"type": "NONE",
@@ -623,24 +635,24 @@
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"dependsOn": [
+				{
+					"name": "kubelet"
+				},
 				{
 					"name": "apiserver"
 				},
 				{
 					"name": "controller"
-				},
-				{
-					"name": "kubelet"
 				}
 			]
 		},
 		{
 			"name": "nirmata-kube-installer",
-			"imageRepository": "nirmata/nirmata-kube-installer",
+			"imageRepository": "registry-v2.nirmata.io/nirmata/nirmata-kube-installer",
 			"tag": "1.7.9",
 			"type": "stateless",
 			"serviceSpec": [
@@ -661,10 +673,6 @@
 					"advancedHostConfig": "",
 					"advancedNetworkConfig": "",
 					"advancedConfig": "",
-					"k8sDeploymentAnnotations": {},
-					"k8sPodAnnotations": {},
-					"k8sServiceAnnotations": {},
-					"k8sStatefulSetAnnotations": {},
 					"healthCheck": [
 						{
 							"type": "NONE",
@@ -696,7 +704,7 @@
 			],
 			"containerType": [
 				{
-					"name": "nolimit"
+					"name": "No Limit"
 				}
 			],
 			"dependsOn": [
@@ -730,15 +738,22 @@
 			]
 		},
 		{
+			"key": "TUNNEL_SERVER_URL",
+			"value": "wss://alpha.nirmata.io/tunnels",
+			"services": [
+				"nirmata-kube-installer"
+			]
+		},
+		{
 			"key": "NIRMATA_SERVICE_CLUSTER_IP_RANGE",
-			"value": "10.10.0.0/16",
+			"value": "10.10.0.0/20",
 			"services": [
 				"apiserver"
 			]
 		},
 		{
 			"key": "NIRMATA_CLUSTER_CIDR",
-			"value": "10.244.0.0/16",
+			"value": "10.10.32.0/20",
 			"services": [
 				"controller",
 				"proxy"
@@ -749,6 +764,48 @@
 			"value": "10.10.0.10",
 			"services": [
 				"kubelet"
+			]
+		},
+		{
+			"key": "KUBE_API_SERVER_ARGS",
+			"value": "--advertise-address={NIRMATA_HOST_PRIVATE_ADDRESS} --service-cluster-ip-range=10.10.0.0/20 --insecure-bind-address=0.0.0.0 --etcd-servers=http://{NIRMATA_HOST_PRIVATE_ADDRESS}:2379 --client-ca-file=/etc/kubernetes/ssl/ca.crt --tls-cert-file=/etc/kubernetes/ssl/server.crt --tls-private-key-file=/etc/kubernetes/ssl/server.key --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota,DefaultTolerationSeconds --allow-privileged=true --service-account-key-file=/etc/kubernetes/ssl/server.key --v=6",
+			"services": [
+				"apiserver"
+			]
+		},
+		{
+			"key": "KUBE_SCHEDULER_ARGS",
+			"value": "--master={apiserver.NIRMATA_SERVICE_ADDRESS}:8080",
+			"services": [
+				"scheduler"
+			]
+		},
+		{
+			"key": "KUBE_CONTROLLER_MANAGER_ARGS",
+			"value": "--master={apiserver.NIRMATA_SERVICE_ADDRESS}:8080 --service-account-private-key-file=/etc/kubernetes/ssl/server.key --root-ca-file=/etc/kubernetes/ssl/ca.crt --allocate-node-cidrs=true --cluster-cidr={NIRMATA_CLUSTER_CIDR} --cluster-name={NIRMATA_ENVIRONMENT_NAME} --v=6",
+			"services": [
+				"controller"
+			]
+		},
+		{
+			"key": "KUBELET_ARGS",
+			"value": "--api-servers=http://{apiserver.NIRMATA_SERVICE_ADDRESS}:8080 --container-runtime=docker --allow-privileged=true --pod-manifest-path=/etc/kubernetes/manifests --network-plugin=cni --cni-conf-dir=/etc/cni/net.d --cni-bin-dir=/opt/cni/bin --cluster-dns={NIRMATA_CLUSTER_DNS} --cluster-domain=cluster.local --v=3",
+			"services": [
+				"kubelet"
+			]
+		},
+		{
+			"key": "KUBE_PROXY_ARGS",
+			"value": "--kubeconfig=/var/lib/kubelet/proxy.yaml --v=6",
+			"services": [
+				"proxy"
+			]
+		},
+		{
+			"key": "ETCD_ARGS",
+			"value": "--listen-client-urls=http://{NIRMATA_HOST_PRIVATE_ADDRESS}:2379 --advertise-client-urls=http://{NIRMATA_HOST_PRIVATE_ADDRESS}:2379 --data-dir=/var/etcd/data",
+			"services": [
+				"etcd"
 			]
 		}
 	],
